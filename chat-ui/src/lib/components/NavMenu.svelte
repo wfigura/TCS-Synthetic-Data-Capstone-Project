@@ -50,20 +50,19 @@
 	<a class="flex items-center rounded-xl text-lg font-semibold" href="{PUBLIC_ORIGIN}{base}/">
 		<Logo classNames="mr-1" />
 		{PUBLIC_APP_NAME}
-		SynthAI
 	</a>
-	<a
+	<!-- <a
 		href={`${base}/`}
 		on:click={handleNewChatClick}
 		class="flex rounded-lg border bg-white px-2 py-0.5 text-center shadow-sm hover:shadow-none dark:border-gray-600 dark:bg-gray-700"
 	>
 		New Chat
-	</a>
+	</a> -->
 </div>
 <div
-	class="scrollbar-custom flex flex-col gap-1 overflow-y-auto rounded-r-xl from-gray-50 px-3 pb-3 pt-2 max-sm:bg-gradient-to-t md:bg-gradient-to-l dark:from-gray-800/30"
+	class="scrollbar-custom flex flex-col gap-1 overflow-y-auto rounded-r-xl from-gray-50 px-3 pb-3 pt-2 dark:from-gray-800/30 max-sm:bg-gradient-to-t md:bg-gradient-to-l"
 >
-	{#each Object.entries(groupedConversations) as [group, convs]}
+	<!-- {#each Object.entries(groupedConversations) as [group, convs]}
 		{#if convs.length}
 			<h4 class="mb-1.5 mt-4 pl-0.5 text-sm text-gray-400 first:mt-0 dark:text-gray-500">
 				{titles[group]}
@@ -72,7 +71,7 @@
 				<NavConversationItem on:editConversationTitle on:deleteConversation {conv} />
 			{/each}
 		{/if}
-	{/each}
+	{/each} -->
 </div>
 <div
 	class="mt-0.5 flex flex-col gap-1 rounded-r-xl p-3 text-sm md:bg-gradient-to-l md:from-gray-50 md:dark:from-gray-800/30"
@@ -89,7 +88,7 @@
 			>
 			<button
 				type="submit"
-				class="ml-auto h-6 flex-none items-center gap-1.5 rounded-md border bg-white px-2 text-gray-700 shadow-sm group-hover:flex hover:shadow-none md:hidden dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400 dark:hover:text-gray-300"
+				class="ml-auto h-6 flex-none items-center gap-1.5 rounded-md border bg-white px-2 text-gray-700 shadow-sm hover:shadow-none group-hover:flex dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400 dark:hover:text-gray-300 md:hidden"
 			>
 				Sign Out
 			</button>

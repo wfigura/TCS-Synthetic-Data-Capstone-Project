@@ -33,20 +33,21 @@
 			<div class="mb-3 flex items-center text-2xl font-semibold">
 				<Logo classNames="mr-1 flex-none" />
 				{PUBLIC_APP_NAME}
-				<div
+				<!-- <div
 					class="ml-3 flex h-6 items-center rounded-lg border border-gray-100 bg-gray-50 px-2 text-base text-gray-400 dark:border-gray-700/60 dark:bg-gray-800"
 				>
 					v{PUBLIC_VERSION}
-				</div>
+				</div> -->
 			</div>
 			<p class="text-base text-gray-600 dark:text-gray-400">
 				{PUBLIC_APP_DESCRIPTION ||
-					"Making the community's best AI chat models available to everyone."}
+					"UCI CS180 Project Synthetic Data."}
 			</p>
 		</div>
 	</div>
 	<div class="lg:col-span-2 lg:pl-24">
-		{#each announcementBanners as banner}
+		<!-- Banner for the new model introduction -->
+		<!-- {#each announcementBanners as banner}
 			<AnnouncementBanner classNames="mb-4" title={banner.title}>
 				<a
 					target="_blank"
@@ -54,7 +55,7 @@
 					class="mr-2 flex items-center underline hover:no-underline">{banner.linkTitle}</a
 				>
 			</AnnouncementBanner>
-		{/each}
+		{/each} -->
 		<div class="overflow-hidden rounded-xl border dark:border-gray-800">
 			<div class="flex p-3">
 				<div>
@@ -81,7 +82,7 @@
 			<ModelCardMetadata variant="dark" model={currentModel} />
 		</div>
 	</div>
-	{#if currentModelMetadata.promptExamples}
+	<!-- {#if currentModelMetadata.promptExamples}
 		<div class="lg:col-span-3 lg:mt-6">
 			<p class="mb-3 text-gray-600 dark:text-gray-300">Examples</p>
 			<div class="grid gap-3 lg:grid-cols-3 lg:gap-5">
@@ -95,6 +96,6 @@
 					</button>
 				{/each}
 			</div>
-		</div>{/if}
+		</div>{/if} -->
 	<div class="h-40 sm:h-24" />
 </div>
