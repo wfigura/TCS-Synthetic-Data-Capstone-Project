@@ -34,16 +34,15 @@
 			textareaElement.focus();
 		}
 	});
-
 </script>
 
 <svelte:window bind:innerWidth />
 
 <div class="relative flex min-w-0 flex-1">
 	<pre
-		class="scrollbar-custom invisible overflow-x-hidden overflow-y-scroll whitespace-pre-wrap break-words p-3"
+		class="scrollbar-custom invisible overflow-x-hidden overflow-y-scroll whitespace-pre-wrap break-words"
 		aria-hidden="true"
-		style="min-height: {minHeight}; max-height: {maxHeight}">{(value || " ") + "\n"}</pre>
+		style="min-height: {minHeight}; max-height: {maxHeight}">{" " + "\n"}</pre>
 
 	<textarea
 		enterkeyhint="send"

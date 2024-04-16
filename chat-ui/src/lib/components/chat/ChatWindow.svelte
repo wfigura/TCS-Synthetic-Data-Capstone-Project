@@ -361,7 +361,14 @@
 							<div class="max-sm:hidden">Share this conversation</div>
 						{/if}
 					</button>
+				{:else}
+					<p />
 				{/if}
+				<button
+					class="btn mx-1 my-1 inline-block self-end rounded-lg bg-transparent text-gray-400 enabled:hover:text-gray-600 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
+				>
+					<input type="file" id="fileUpload" name="fileUpload" />
+				</button>
 			</div>
 		</div>
 	</div>

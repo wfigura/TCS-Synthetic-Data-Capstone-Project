@@ -40,8 +40,7 @@
 				</div> -->
 			</div>
 			<p class="text-base text-gray-600 dark:text-gray-400">
-				{PUBLIC_APP_DESCRIPTION ||
-					"UCI CS180 Project Synthetic Data."}
+				{PUBLIC_APP_DESCRIPTION}
 			</p>
 		</div>
 	</div>
@@ -60,10 +59,10 @@
 			<div class="flex p-3">
 				<div>
 					<div class="text-sm text-gray-600 dark:text-gray-400">Current Model</div>
-					<div class="flex items-center gap-1.5 font-semibold max-sm:text-smd">
+					<div class="max-sm:text-smd flex items-center gap-1.5 font-semibold">
 						{#if currentModel.logoUrl}
 							<img
-								class=" overflown aspect-square size-4 rounded border dark:border-gray-700"
+								class=" overflown size-4 aspect-square rounded border dark:border-gray-700"
 								src={currentModel.logoUrl}
 								alt=""
 							/>
@@ -82,20 +81,20 @@
 			<ModelCardMetadata variant="dark" model={currentModel} />
 		</div>
 	</div>
-	<!-- {#if currentModelMetadata.promptExamples}
+	{#if currentModelMetadata.promptExamples}
 		<div class="lg:col-span-3 lg:mt-6">
 			<p class="mb-3 text-gray-600 dark:text-gray-300">Examples</p>
 			<div class="grid gap-3 lg:grid-cols-3 lg:gap-5">
 				{#each currentModelMetadata.promptExamples as example}
 					<button
 						type="button"
-						class="rounded-xl border bg-gray-50 p-3 text-gray-600 hover:bg-gray-100 max-xl:text-sm xl:p-3.5 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+						class="rounded-xl border bg-gray-50 p-3 text-gray-600 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 max-xl:text-sm xl:p-3.5"
 						on:click={() => dispatch("message", example.prompt)}
 					>
 						{example.title}
 					</button>
 				{/each}
 			</div>
-		</div>{/if} -->
+		</div>{/if}
 	<div class="h-40 sm:h-24" />
 </div>
