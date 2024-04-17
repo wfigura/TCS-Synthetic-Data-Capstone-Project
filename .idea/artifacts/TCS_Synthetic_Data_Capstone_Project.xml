@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="TCS-Synthetic-Data-Capstone-Project">
+    <output-path>$PROJECT_DIR$/out/artifacts/TCS_Synthetic_Data_Capstone_Project</output-path>
+    <root id="root">
+      <element id="archive" name="TCS_Synthetic_Data_Capstone_Project.jar">
+        <element id="module-output" name="TCS-Synthetic-Data-Capstone-Project" />
+      </element>
+    </root>
+  </artifact>
+</component>

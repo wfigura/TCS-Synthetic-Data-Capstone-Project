@@ -19,5 +19,5 @@
 		type="file"
 		accept="image/*"
 	/>
-	<CarbonUpload class="mr-2 text-xs " /> Upload image
+	<CarbonUpload class="mr-2 text-xs " /> Upload Sample File
 </button>
