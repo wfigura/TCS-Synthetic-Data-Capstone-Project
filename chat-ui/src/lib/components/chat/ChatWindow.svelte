@@ -368,7 +368,8 @@
 					class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40">
 					<input type="file" id="fileUpload" name="fileUpload" />
 				</button> -->
-				<UploadBtn></UploadBtn>
+				<UploadBtn {files}>
+				</UploadBtn>
 			<!-- </div> -->
 			</div>
 				{/if}
