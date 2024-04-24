@@ -19,6 +19,7 @@ import { buildSubtree } from "$lib/utils/tree/buildSubtree.js";
 import { addChildren } from "$lib/utils/tree/addChildren.js";
 import { addSibling } from "$lib/utils/tree/addSibling.js";
 import { preprocessMessages } from "$lib/server/preprocessMessages.js";
+import * as fs from 'fs';
 
 export async function POST({ request, locals, params, getClientAddress }) {
 	const id = z.string().parse(params.id);
@@ -397,6 +398,25 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			update({
 				type: "finalAnswer",
 				text: messageToWriteTo.content,
+			});
+
+			
+			function truncateStringAfterCharacter(input: string, character: string): string {
+				const index = input.indexOf(character);
+				if (index !== -1) {
+					return input.substring(index);
+				} else {
+					return input;
+				}
+			}
+			
+			// write ai output input a txt file
+			fs.appendFile('./output.txt', truncateStringAfterCharacter(messageToWriteTo.content, '|') + '\r\n', (err) => {
+				if (err) {
+					console.error('Error appending to file:', err);
+				} else {
+					console.log('Content was appended to file successfully.');
+				}
 			});
 
 			await summarizeIfNeeded;
