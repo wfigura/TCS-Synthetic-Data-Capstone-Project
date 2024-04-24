@@ -330,6 +330,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			);
 
 			const previousText = messageToWriteTo.content;
+			
 
 			try {
 				const endpoint = await model.getEndpoint();
@@ -400,24 +401,28 @@ export async function POST({ request, locals, params, getClientAddress }) {
 				text: messageToWriteTo.content,
 			});
 
-			
-			function truncateStringAfterCharacter(input: string, character: string): string {
-				const index = input.indexOf(character);
-				if (index !== -1) {
-					return input.substring(index);
-				} else {
-					return input;
-				}
+			// write assistant response into a txt file
+			const index = messageToWriteTo.content.indexOf('|');
+			const lines = index !== -1 ? messageToWriteTo.content.substring(index) : messageToWriteTo.content;
+			if (messagesForPrompt.length == 2) {
+				fs.writeFile('./output.txt', lines + '\r\n', (err) => {
+					if (err) {
+						console.error('Error appending to file:', err);
+					} else {
+						console.log('Content was appended to file successfully.');
+					}
+				});
+			} else {
+				const data = lines.split('\n').slice(2);
+				const newString = data.join('\n');
+				fs.appendFile('./output.txt', newString + '\r\n', (err) => {
+					if (err) {
+						console.error('Error appending to file:', err);
+					} else {
+						console.log('Content [' + data.length + ' lines] was appended to file successfully.');
+					}
+				});
 			}
-			
-			// write ai output input a txt file
-			fs.appendFile('./output.txt', truncateStringAfterCharacter(messageToWriteTo.content, '|') + '\r\n', (err) => {
-				if (err) {
-					console.error('Error appending to file:', err);
-				} else {
-					console.log('Content was appended to file successfully.');
-				}
-			});
 
 			await summarizeIfNeeded;
 			controller.close();
