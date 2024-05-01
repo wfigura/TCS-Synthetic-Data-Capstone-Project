@@ -23,11 +23,6 @@
 			if (event.dataTransfer.items[0].kind === "file") {
 				const file = event.dataTransfer.items[0].getAsFile();
 				if (file) {
-					if (!event.dataTransfer.items[0].type.startsWith("image")) {
-						setErrorMsg("Only images are supported");
-						files = [];
-						return;
-					}
 					// if image is bigger than 2MB abort
 					if (file.size > 2 * 1024 * 1024) {
 						setErrorMsg("Image is too big. (2MB max)");

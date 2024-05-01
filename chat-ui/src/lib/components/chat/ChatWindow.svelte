@@ -297,12 +297,7 @@
 								disabled={isReadOnly || lastIsError}
 							/>
 						{/if}
-
-						<!-- <button
-							class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
-						>
-							<input type="file" id="fileUpload" name="fileUpload" /></button
-						> -->
+						<div class="flex items-center">
 						<!-- <CloudUpload/> -->
 						{#if loading}
 							<button
@@ -326,6 +321,7 @@
 							</button>
 						{/if}
 					</div>
+				</div>
 				{/if}
 			</form>
 			<div
@@ -346,6 +342,7 @@
 					be inaccurate or false.
 				</p> -->
 				{#if messages.length}
+				<div class="flex justify-between">
 					<button
 						class="flex flex-none items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800"
 						type="button"
@@ -361,14 +358,21 @@
 							<div class="max-sm:hidden">Share this conversation</div>
 						{/if}
 					</button>
-				{:else}
-					<p />
-				{/if}
-				<button
-					class="btn mx-1 my-1 inline-block self-end rounded-lg bg-transparent text-gray-400 enabled:hover:text-gray-600 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
-				>
+				</div>
+				<div class="flex">
+					<!-- <p class="flex items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800">
+						Upload a file
+					</p>
+					<div class="file-upload">
+					<button
+					class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40">
 					<input type="file" id="fileUpload" name="fileUpload" />
-				</button>
+				</button> -->
+				<UploadBtn {files}>
+				</UploadBtn>
+			<!-- </div> -->
+			</div>
+				{/if}
 			</div>
 		</div>
 	</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { afterUpdate } from "svelte";
 	import CopyToClipBoardBtn from "./CopyToClipBoardBtn.svelte";
+	import DownloadBtn from "./DownloadBtn.svelte";
 
 	export let code = "";
 	export let lang = "";
@@ -25,4 +26,8 @@
 		classNames="absolute top-2 right-2 invisible opacity-0 group-hover:visible group-hover:opacity-100"
 		value={code}
 	/>
+	<DownloadBtn
+	value = {code}
+	/>
+
 </div>
