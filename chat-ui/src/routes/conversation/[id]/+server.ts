@@ -19,6 +19,7 @@ import { buildSubtree } from "$lib/utils/tree/buildSubtree.js";
 import { addChildren } from "$lib/utils/tree/addChildren.js";
 import { addSibling } from "$lib/utils/tree/addSibling.js";
 import { preprocessMessages } from "$lib/server/preprocessMessages.js";
+import * as fs from 'fs';
 
 export async function POST({ request, locals, params, getClientAddress }) {
 	const id = z.string().parse(params.id);
@@ -329,6 +330,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			);
 
 			const previousText = messageToWriteTo.content;
+			
 
 			try {
 				const endpoint = await model.getEndpoint();
@@ -398,6 +400,29 @@ export async function POST({ request, locals, params, getClientAddress }) {
 				type: "finalAnswer",
 				text: messageToWriteTo.content,
 			});
+
+			// write assistant response into a txt file
+			const index = messageToWriteTo.content.indexOf('|');
+			const lines = index !== -1 ? messageToWriteTo.content.substring(index) : messageToWriteTo.content;
+			if (messagesForPrompt.length == 2) {
+				fs.writeFile('./output.txt', lines + '\r\n', (err) => {
+					if (err) {
+						console.error('Error appending to file:', err);
+					} else {
+						console.log('Content was appended to file successfully.');
+					}
+				});
+			} else {
+				const data = lines.split('\n').slice(2);
+				const newString = data.join('\n');
+				fs.appendFile('./output.txt', newString + '\r\n', (err) => {
+					if (err) {
+						console.error('Error appending to file:', err);
+					} else {
+						console.log('Content [' + data.length + ' lines] was appended to file successfully.');
+					}
+				});
+			}
 
 			await summarizeIfNeeded;
 			controller.close();
