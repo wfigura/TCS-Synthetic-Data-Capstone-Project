@@ -330,52 +330,59 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			);
 
 			const previousText = messageToWriteTo.content;
-			
+			let lineCount = 0;
+			const maxLineCount = 20;
+			let allText = "";
 
 			try {
 				const endpoint = await model.getEndpoint();
-				for await (const output of await endpoint({
-					messages: processedMessages,
-					preprompt: conv.preprompt,
-					continueMessage: isContinue,
-				})) {
-					// if not generated_text is here it means the generation is not done
-					if (!output.generated_text) {
-						// else we get the next token
-						if (!output.token.special) {
-							update({
-								type: "stream",
-								token: output.token.text,
-							});
-							// abort check
-							const date = abortedGenerations.get(convId.toString());
-							if (date && date > promptedAt) {
-								break;
-							}
-							// no output check
-							if (!output) {
-								break;
-							}
+				while (lineCount <= maxLineCount) {
+					for await (const output of await endpoint({
+						messages: processedMessages,
+						preprompt: conv.preprompt,
+						continueMessage: isContinue,
+					})) {
+						// if not generated_text is here it means the generation is not done
+						if (!output.generated_text) {
+							// else we get the next token
+							if (!output.token.special) {
+								update({
+									type: "stream",
+									token: output.token.text,
+								});
+								// abort check
+								const date = abortedGenerations.get(convId.toString());
+								if (date && date > promptedAt) {
+									break;
+								}
+								// no output check
+								if (!output) {
+									break;
+								}
 
-							// otherwise we just concatenate tokens
-							messageToWriteTo.content += output.token.text;
+								// otherwise we just concatenate tokens
+								messageToWriteTo.content += output.token.text;
+								if (output.token.text == "\n") {
+									lineCount++;
+									if (lineCount > maxLineCount) break;
+								}
+							}
+						} else {
+							messageToWriteTo.interrupted = !output.token.special;
+							// add output.generated text to the last message
+							// strip end tokens from the output.generated_text
+							allText += (model.parameters.stop ?? []).reduce((acc: string, curr: string) => {
+								if (acc.endsWith(curr)) {
+									messageToWriteTo.interrupted = false;
+									return acc.slice(0, acc.length - curr.length);
+								}
+								return acc;
+							}, output.generated_text.trimEnd());
 						}
-					} else {
-						messageToWriteTo.interrupted = !output.token.special;
-						// add output.generated text to the last message
-						// strip end tokens from the output.generated_text
-						const text = (model.parameters.stop ?? []).reduce((acc: string, curr: string) => {
-							if (acc.endsWith(curr)) {
-								messageToWriteTo.interrupted = false;
-								return acc.slice(0, acc.length - curr.length);
-							}
-							return acc;
-						}, output.generated_text.trimEnd());
-
-						messageToWriteTo.content = previousText + text;
-						messageToWriteTo.updatedAt = new Date();
 					}
 				}
+				messageToWriteTo.content = previousText + allText;
+				messageToWriteTo.updatedAt = new Date();
 			} catch (e) {
 				update({ type: "status", status: "error", message: (e as Error).message });
 			}
