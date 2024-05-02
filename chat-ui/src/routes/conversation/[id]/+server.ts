@@ -329,10 +329,9 @@ export async function POST({ request, locals, params, getClientAddress }) {
 				convId
 			);
 
-			const previousText = messageToWriteTo.content;
+			let previousText = messageToWriteTo.content;
 			let lineCount = 0;
-			const maxLineCount = 20;
-			let allText = "";
+			const maxLineCount = 15;
 
 			try {
 				const endpoint = await model.getEndpoint();
@@ -364,25 +363,26 @@ export async function POST({ request, locals, params, getClientAddress }) {
 								messageToWriteTo.content += output.token.text;
 								if (output.token.text == "\n") {
 									lineCount++;
-									if (lineCount > maxLineCount) break;
 								}
 							}
 						} else {
 							messageToWriteTo.interrupted = !output.token.special;
 							// add output.generated text to the last message
 							// strip end tokens from the output.generated_text
-							allText += (model.parameters.stop ?? []).reduce((acc: string, curr: string) => {
+							const text = (model.parameters.stop ?? []).reduce((acc: string, curr: string) => {
 								if (acc.endsWith(curr)) {
 									messageToWriteTo.interrupted = false;
 									return acc.slice(0, acc.length - curr.length);
 								}
 								return acc;
 							}, output.generated_text.trimEnd());
+
+							messageToWriteTo.content = previousText + text;
+							previousText = messageToWriteTo.content;
+							messageToWriteTo.updatedAt = new Date();
 						}
 					}
 				}
-				messageToWriteTo.content = previousText + allText;
-				messageToWriteTo.updatedAt = new Date();
 			} catch (e) {
 				update({ type: "status", status: "error", message: (e as Error).message });
 			}
