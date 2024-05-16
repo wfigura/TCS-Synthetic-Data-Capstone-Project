@@ -26,6 +26,7 @@
 	import ContinueBtn from "../ContinueBtn.svelte";
 	import AssistantIntroduction from "./AssistantIntroduction.svelte";
 	import ChatMessage from "./ChatMessage.svelte";
+	import ChatMessage2 from "./ChatMessage2.svelte";
 	import ScrollToBottomBtn from "../ScrollToBottomBtn.svelte";
 	import { browser } from "$app/environment";
 	import { snapScrollToBottom } from "$lib/actions/snapScrollToBottom";
@@ -173,6 +174,18 @@
 						on:vote
 						on:continue
 					/>
+					<ChatMessage2
+						{loading}
+						{messages}
+						id={messages[0].id}
+						isAuthor={!shared}
+						readOnly={isReadOnly}
+						<!-- CHANGE THE MODEL-->
+						model={currentModel}
+						on:retry
+						on:vote
+						on:continue
+					/>
 				</div>
 			{:else if pending}
 				<ChatMessage
@@ -188,6 +201,22 @@
 					id={"0-0-0-0-0"}
 					isAuthor={!shared}
 					readOnly={isReadOnly}
+					model={currentModel}
+				/>
+				<ChatMessage2
+					loading={true}
+					messages={[
+						{
+							id: "0-0-0-0-0",
+							content: "",
+							from: "assistant",
+							children: [],
+						},
+					]}
+					id={"0-0-0-0-0"}
+					isAuthor={!shared}
+					readOnly={isReadOnly}
+					<!-- CHANGE THE MODEL-->
 					model={currentModel}
 				/>
 			{:else if !assistant}
