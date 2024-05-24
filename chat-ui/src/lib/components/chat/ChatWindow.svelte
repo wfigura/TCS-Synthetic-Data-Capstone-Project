@@ -249,9 +249,9 @@
 					/>
 				{:else}
 					<div class="ml-auto gap-2">
-						{#if currentModel.multimodal}
+						<!-- {#if currentModel.multimodal}
 							<UploadBtn bind:files classNames="ml-auto" />
-						{/if}
+						{/if} -->
 						{#if messages && lastMessage && lastMessage.interrupted && !isReadOnly}
 							<ContinueBtn
 								on:click={() => {
@@ -298,30 +298,30 @@
 							/>
 						{/if}
 						<div class="flex items-center">
-						<!-- <CloudUpload/> -->
-						{#if loading}
-							<button
-								class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:hidden"
-								on:click={() => dispatch("stop")}
-							>
-								<CarbonStopFilledAlt />
-							</button>
-							<div
-								class="mx-1 my-1 hidden h-[2.4rem] items-center p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:flex"
-							>
-								<EosIconsLoading />
-							</div>
-						{:else}
-							<button
-								class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
-								disabled={!message || isReadOnly}
-								type="submit"
-							>
-								<CarbonSendAltFilled />
-							</button>
-						{/if}
+							<!-- <CloudUpload/> -->
+							{#if loading}
+								<button
+									class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:hidden"
+									on:click={() => dispatch("stop")}
+								>
+									<CarbonStopFilledAlt />
+								</button>
+								<div
+									class="mx-1 my-1 hidden h-[2.4rem] items-center p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40 md:flex"
+								>
+									<EosIconsLoading />
+								</div>
+							{:else}
+								<button
+									class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
+									disabled={!message || isReadOnly}
+									type="submit"
+								>
+									<CarbonSendAltFilled />
+								</button>
+							{/if}
+						</div>
 					</div>
-				</div>
 				{/if}
 			</form>
 			<div
@@ -342,25 +342,25 @@
 					be inaccurate or false.
 				</p> -->
 				{#if messages.length}
-				<div class="flex justify-between">
-					<button
-						class="flex flex-none items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800"
-						type="button"
-						class:hover:underline={!isSharedRecently}
-						on:click={onShare}
-						disabled={isSharedRecently}
-					>
-						{#if isSharedRecently}
-							<CarbonCheckmark class="text-[.6rem] sm:mr-1.5 sm:text-green-600" />
-							<div class="text-green-600 max-sm:hidden">Link copied to clipboard</div>
-						{:else}
-							<CarbonExport class="sm:text-primary-500 text-[.6rem] sm:mr-1.5" />
-							<div class="max-sm:hidden">Share this conversation</div>
-						{/if}
-					</button>
-				</div>
-				<div class="flex">
-					<!-- <p class="flex items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800">
+					<div class="flex justify-between">
+						<button
+							class="flex flex-none items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800"
+							type="button"
+							class:hover:underline={!isSharedRecently}
+							on:click={onShare}
+							disabled={isSharedRecently}
+						>
+							{#if isSharedRecently}
+								<CarbonCheckmark class="text-[.6rem] sm:mr-1.5 sm:text-green-600" />
+								<div class="text-green-600 max-sm:hidden">Link copied to clipboard</div>
+							{:else}
+								<CarbonExport class="sm:text-primary-500 text-[.6rem] sm:mr-1.5" />
+								<div class="max-sm:hidden">Share this conversation</div>
+							{/if}
+						</button>
+					</div>
+					<div class="flex">
+						<!-- <p class="flex items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800">
 						Upload a file
 					</p>
 					<div class="file-upload">
@@ -368,10 +368,9 @@
 					class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40">
 					<input type="file" id="fileUpload" name="fileUpload" />
 				</button> -->
-				<UploadBtn {files}>
-				</UploadBtn>
-			<!-- </div> -->
-			</div>
+						<!-- <UploadBtn {files} /> -->
+						<!-- </div> -->
+					</div>
 				{/if}
 			</div>
 		</div>

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from "svelte";
+	import Papa from "papaparse";
+	import CarbonUpload from "~icons/carbon/upload";
 
 	export let value = "";
 	export let minRows = 1;
@@ -34,11 +36,42 @@
 			textareaElement.focus();
 		}
 	});
+
+	export let classNames = "";
+	export let files: File[] = [];
+	let filelist: FileList;
+	let fileData: string = "";
+
+	$: if (filelist) {
+		files = Array.from(filelist);
+		if (files.length > 0) {
+			processCSV(files[0]);
+		}
+	}
+
+	function processCSV(file: File) {
+		const reader = new FileReader();
+		reader.onload = (event) => {
+			const csvData = event.target?.result as string;
+			Papa.parse(csvData, {
+				header: true,
+				complete: (results: any) => {
+					const filteredData = results.data.filter((row: any) => {
+						return Object.values(row).some((value) => value.trim() !== "");
+					});
+					fileData = JSON.stringify(filteredData, null, 2);
+					value = fileData; // Update the textarea value with filtered data
+					console.log("Filtered CSV Data:", filteredData);
+				},
+			});
+		};
+		reader.readAsText(file);
+	}
 </script>
 
 <svelte:window bind:innerWidth />
 
-<div class="relative flex min-w-0 flex-1">
+<div class="relative flex min-w-0 flex-1 items-center">
 	<pre
 		class="scrollbar-custom invisible overflow-x-hidden overflow-y-scroll whitespace-pre-wrap break-words"
 		aria-hidden="true"
@@ -59,6 +92,17 @@
 		on:beforeinput
 		{placeholder}
 	/>
+	<button
+		class="btn relative h-8 rounded-lg border bg-white px-3 py-1 text-sm text-gray-500 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 {classNames}"
+	>
+		<input
+			bind:files={filelist}
+			class="absolute w-full cursor-pointer opacity-0"
+			type="file"
+			accept=".csv"
+		/>
+		<CarbonUpload class="mr-2 text-xs" /> Upload
+	</button>
 </div>
 
 <style>
@@ -67,5 +111,8 @@
 		font-family: inherit;
 		box-sizing: border-box;
 		line-height: 1.5;
+	}
+	.relative.flex {
+		align-items: center;
 	}
 </style>
