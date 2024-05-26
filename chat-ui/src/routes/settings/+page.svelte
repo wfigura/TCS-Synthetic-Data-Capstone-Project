@@ -8,6 +8,7 @@
 
 	import { enhance } from "$app/forms";
 	import { base } from "$app/paths";
+	import { switchTheme } from "$lib/switchTheme";
 
 	import { useSettingsStore } from "$lib/stores/settings";
 	import Switch from "$lib/components/Switch.svelte";
@@ -49,6 +50,14 @@
 				Hide emoticons in conversation topics
 			</div>
 		</label>
+
+		<button
+			on:click={switchTheme}
+			type="button"
+			class="flex h-9 flex-none items-center gap-1.5 rounded-lg pl-2.5 pr-2 text-black hover:bg-gray-100"
+		>
+			Toggle Theme
+		</button>
 
 		<div class="mt-12 flex flex-col gap-3">
 			<a
@@ -92,7 +101,7 @@
 				</p>
 				<button
 					type="submit"
-					class="mt-2 rounded-full bg-red-700 px-5 py-2 text-lg font-semibold text-gray-100 ring-gray-400 ring-offset-1 transition-all focus-visible:outline-none focus-visible:ring hover:ring"
+					class="mt-2 rounded-full bg-red-700 px-5 py-2 text-lg font-semibold text-gray-100 ring-gray-400 ring-offset-1 transition-all hover:ring focus-visible:outline-none focus-visible:ring"
 				>
 					Confirm deletion
 				</button>
