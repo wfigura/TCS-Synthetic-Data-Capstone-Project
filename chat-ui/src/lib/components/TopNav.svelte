@@ -3,11 +3,16 @@
 	import { base } from "$app/paths";
 	import { PUBLIC_ORIGIN } from "$env/static/public";
 	import { PUBLIC_APP_NAME } from "$env/static/public";
+	import { isAborted } from "$lib/stores/isAborted";
 	import Logo from "$lib/components/icons/Logo.svelte";
+
+	function handleNewChatClick() {
+		isAborted.set(true);
+	}
 </script>
 
 <div class="banner">
-	<div>
+	<div class="logo">
 		<a
 			class="flex items-center rounded-xl text-lg font-semibold dark:text-white"
 			href="{PUBLIC_ORIGIN}{base}/"
@@ -31,6 +36,15 @@
 			</svg>
 		</a>
 	</div>
+	<div class="newChat">
+		<a
+			href={`${base}/`}
+			on:click={handleNewChatClick}
+			class="flex rounded-lg border border-gray-600 bg-gray-700 text-center shadow-sm hover:bg-gray-600"
+		>
+			New Chat
+		</a>
+	</div>
 </div>
 
 <style>
@@ -39,13 +53,26 @@
 		background-color: #121212;
 		color: white;
 		text-align: center;
-		padding: 1rem;
-		display: flex;
-		flex-direction: row;
+		padding: 18px;
+		display: block;
+	}
+
+	.logo {
+		float: left;
+	}
+
+	.newChat {
+		float: right;
+		margin-right: 10px;
+		margin-top: 2px;
+	}
+
+	.newChat a {
+		padding: 3px 26px;
 	}
 
 	.settings {
-		margin-left: auto;
+		float: right;
 	}
 
 	.gear-icon {

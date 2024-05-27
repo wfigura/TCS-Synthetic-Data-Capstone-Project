@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from "svelte";
+	import UploadBtn from "../UploadBtn.svelte";
 	import Papa from "papaparse";
-	import CarbonUpload from "~icons/carbon/upload";
+	import type { Message } from "$lib/types/Message";
 
 	export let value = "";
 	export let minRows = 1;
 	export let maxRows: null | number = null;
 	export let placeholder = "";
 	export let disabled = false;
+	export let files: File[] = [];
 
 	const TABLET_VIEWPORT_WIDTH = 768;
 
@@ -31,42 +33,46 @@
 		}
 	}
 
+	const dispatch2 = createEventDispatcher<{
+		message: string;
+		share: void;
+		stop: void;
+		retry: { id: Message["id"]; content?: string };
+		continue: { id: Message["id"] };
+		fileData: string;
+	}>();
+
+	let file;
+	let firstFewRows = [];
+
+	function handleFileUpload(event) {
+		console.log("here???");
+		file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = function (e) {
+				const text = e.target.result;
+				const parsedData = Papa.parse(text, { header: true });
+				firstFewRows = parsedData.data.slice(0, 5);
+				console.log(firstFewRows);
+				let message = `Generate an additional 20 rows of new, unique data based on file ${files[0].name}. A preview of the file uploaded: ${firstFewRows}`;
+				dispatch2("message", message);
+			};
+			reader.readAsText(file);
+		}
+	}
+
+	let filelist: FileList;
+
+	$: if (filelist) {
+		files = Array.from(filelist);
+	}
+
 	onMount(() => {
 		if (innerWidth > TABLET_VIEWPORT_WIDTH) {
 			textareaElement.focus();
 		}
 	});
-
-	export let classNames = "";
-	export let files: File[] = [];
-	let filelist: FileList;
-	let fileData: string = "";
-
-	$: if (filelist) {
-		files = Array.from(filelist);
-		if (files.length > 0) {
-			processCSV(files[0]);
-		}
-	}
-
-	function processCSV(file: File) {
-		const reader = new FileReader();
-		reader.onload = (event) => {
-			const csvData = event.target?.result as string;
-			Papa.parse(csvData, {
-				header: true,
-				complete: (results: any) => {
-					const filteredData = results.data.filter((row: any) => {
-						return Object.values(row).some((value) => value.trim() !== "");
-					});
-					fileData = JSON.stringify(filteredData, null, 2);
-					value = fileData; // Update the textarea value with filtered data
-					console.log("Filtered CSV Data:", filteredData);
-				},
-			});
-		};
-		reader.readAsText(file);
-	}
 </script>
 
 <svelte:window bind:innerWidth />
@@ -75,7 +81,10 @@
 	<pre
 		class="scrollbar-custom invisible overflow-x-hidden overflow-y-scroll whitespace-pre-wrap break-words"
 		aria-hidden="true"
-		style="min-height: {minHeight}; max-height: {maxHeight}">{" " + "\n"}</pre>
+		style="min-height: {minHeight}; max-height: {maxHeight}"
+	/>
+	<!-- <UploadBtn bind:files on:change={handleFileUpload} /> -->
+	<!-- <input type="file" bind:files={filelist} accept=".csv" on:change={handleFileUpload} /> -->
 
 	<textarea
 		enterkeyhint="send"
@@ -92,17 +101,6 @@
 		on:beforeinput
 		{placeholder}
 	/>
-	<button
-		class="btn relative h-8 rounded-lg border bg-white px-3 py-1 text-sm text-gray-500 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 {classNames}"
-	>
-		<input
-			bind:files={filelist}
-			class="absolute w-full cursor-pointer opacity-0"
-			type="file"
-			accept=".csv"
-		/>
-		<CarbonUpload class="mr-2 text-xs" /> Upload
-	</button>
 </div>
 
 <style>
@@ -110,7 +108,7 @@
 	textarea {
 		font-family: inherit;
 		box-sizing: border-box;
-		line-height: 1.5;
+		line-height: 1.8;
 	}
 	.relative.flex {
 		align-items: center;
