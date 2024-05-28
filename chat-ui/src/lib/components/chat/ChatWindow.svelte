@@ -22,7 +22,6 @@
 	import FileDropzone from "./FileDropzone.svelte";
 	import RetryBtn from "../RetryBtn.svelte";
 	import UploadBtn from "../UploadBtn.svelte";
-	import file2base64 from "$lib/utils/file2base64";
 	import type { Assistant } from "$lib/types/Assistant";
 	import { base } from "$app/paths";
 	import ContinueBtn from "../ContinueBtn.svelte";
@@ -80,21 +79,31 @@
 	const numberOfRows = 6;
 
 	function handleFileUpload(event) {
+		if (loading) return;
 		file = event.target.files[0];
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = function (e) {
-				const text = e.target.result;
+				const text = e.target?.result;
 				const parsedData = Papa.parse(text, { header: false });
 				firstFewRows = parsedData.data
 					.slice(0, numberOfRows)
-					.map((row) => row.join(","))
+					.map((row: any[]) => row.join(","))
 					.join("\n");
 				let message = `A preview of the file uploaded: \n${firstFewRows}.\n\nGenerate 20 more rows of unique, never seen before data based on the fields from the file ${files[0].name}. Each field has an infinite number of possible values it can generate from. The data generated should be downloadable in csv format.`;
 				dispatch("message", message);
 			};
 			reader.readAsText(file);
 		}
+	}
+
+	let number = 20;
+
+	function handleClick() {
+		if (loading) return;
+		message = `Generate ${number} more rows of data.`;
+		dispatch("message", message);
+		message = "";
 	}
 
 	let lastTarget: EventTarget | null = null;
@@ -267,6 +276,22 @@
 					</div>
 				{/if}
 			</div>
+			<div>
+				{#if messages.length > 0}
+					<div class="num_input_btn">
+						<input
+							type="number"
+							bind:value={number}
+							min="0"
+							max="50"
+							step="1"
+							class="styled-input"
+						/>
+						<button on:click={handleClick} class="styled-button">Generate Data</button>
+					</div>
+				{/if}
+			</div>
+
 			<form
 				on:dragover={onDragOver}
 				on:dragenter={onDragEnter}
@@ -283,18 +308,6 @@
 					<div class="flex w-full flex-1 border-none bg-transparent">
 						{#if lastIsError}
 							<ChatInput value="Sorry, something went wrong. Please try again." disabled={true} />
-						{:else if files.length}
-							<ChatInput
-								placeholder="Ask anything"
-								on:beforeinput={(ev) => {
-									if ($page.data.loginRequired) {
-										ev.preventDefault();
-										loginModalOpen = true;
-									}
-								}}
-								maxRows={6}
-								disabled={isReadOnly || lastIsError}
-							/>
 						{:else}
 							<ChatInput
 								placeholder="Ask anything"
@@ -393,3 +406,45 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.num_input_btn {
+		float: right;
+		margin: 10px;
+	}
+
+	.styled-input {
+		border: 2px solid #ccc;
+		color: black;
+		border-radius: 4px;
+		font-size: 16px;
+		width: 80px;
+		text-align: center;
+		margin-right: 10px;
+		background-color: lightgray;
+	}
+
+	.styled-input:focus {
+		outline: none;
+		border-color: #005aba;
+	}
+
+	.styled-button {
+		padding: 2px 5px;
+		background-color: #005aba;
+		color: white;
+		border: none;
+		border-radius: 4px;
+		font-size: 16px;
+		cursor: pointer;
+		transition: background-color 0.3s ease;
+	}
+
+	.styled-button:hover {
+		background-color: rgb(0, 74, 154);
+	}
+
+	.styled-button:focus {
+		outline: none;
+	}
+</style>
