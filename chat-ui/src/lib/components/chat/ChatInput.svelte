@@ -15,7 +15,7 @@
 	let textareaElement: HTMLTextAreaElement;
 	let isCompositionOn = false;
 
-	const dispatch = createEventDispatcher<{ submit: void }>();
+	const dispatch = createEventDispatcher<{ submit: { prompt: string; data: string } }>();
 
 	$: minHeight = `${1 + minRows * 1.5}em`;
 	$: maxHeight = maxRows ? `${1 + maxRows * 1.5}em` : `auto`;
@@ -27,7 +27,10 @@
 			if (innerWidth > TABLET_VIEWPORT_WIDTH) {
 				textareaElement.focus();
 			}
-			dispatch("submit");
+			dispatch("submit", {
+				prompt: "generate synthetic data for me based on the data I provided",
+				data: value,
+			});
 		}
 	}
 
@@ -62,6 +65,11 @@
 					fileData = JSON.stringify(filteredData, null, 2);
 					value = fileData; // Update the textarea value with filtered data
 					console.log("Filtered CSV Data:", filteredData);
+					// Trigger the submit event after processing CSV with the prompt
+					dispatch("submit", {
+						prompt: "generate synthetic data for me based on the data I provided",
+						data: fileData,
+					});
 				},
 			});
 		};
@@ -83,7 +91,6 @@
 		rows="1"
 		class="scrollbar-custom m-0 h-full w-full flex-1 resize-none scroll-p-3 overflow-x-hidden overflow-y-scroll border-0 bg-transparent p-3 outline-none focus:ring-0 focus-visible:ring-0"
 		class:text-gray-400={disabled}
-		bind:value
 		bind:this={textareaElement}
 		{disabled}
 		on:keydown={handleKeydown}
