@@ -181,14 +181,6 @@
 	// 	}
 	// }
 
-	let continueBtnVisible = false;
-	let continueBtnRef: HTMLElement | null = null;
-
-	// const dispatch = createEventDispatcher<{
-	// 	continue: { id: Message["id"] };
-	// }>();
-
-	// $: lastMessage = browser && messages.find((m) => m.id === currentModel.id);
 
 	function handleContinue() {
 		if (lastMessage) {

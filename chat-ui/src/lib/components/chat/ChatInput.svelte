@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from "svelte";
 	import UploadBtn from "../UploadBtn.svelte";
-	import Papa from "papaparse";
+	// import Papa from "papaparse";
 	import type { Message } from "$lib/types/Message";
 
 	export let value = "";
@@ -45,22 +45,22 @@
 	let file;
 	let firstFewRows = [];
 
-	function handleFileUpload(event) {
-		console.log("here???");
-		file = event.target.files[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onload = function (e) {
-				const text = e.target.result;
-				const parsedData = Papa.parse(text, { header: true });
-				firstFewRows = parsedData.data.slice(0, 5);
-				console.log(firstFewRows);
-				let message = `Generate an additional 20 rows of new, unique data based on file ${files[0].name}. A preview of the file uploaded: ${firstFewRows}`;
-				dispatch2("message", message);
-			};
-			reader.readAsText(file);
-		}
-	}
+	// function handleFileUpload(event) {
+	// 	console.log("here???");
+	// 	file = event.target.files[0];
+	// 	if (file) {
+	// 		const reader = new FileReader();
+	// 		reader.onload = function (e) {
+	// 			const text = e.target.result;
+	// 			const parsedData = Papa.parse(text, { header: true });
+	// 			firstFewRows = parsedData.data.slice(0, 5);
+	// 			console.log(firstFewRows);
+	// 			let message = `Generate an additional 20 rows of new, unique data based on file ${files[0].name}. A preview of the file uploaded: ${firstFewRows}`;
+	// 			dispatch2("message", message);
+	// 		};
+	// 		reader.readAsText(file);
+	// 	}
+	// }
 
 	let filelist: FileList;
 
