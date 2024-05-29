@@ -181,7 +181,6 @@
 	// 	}
 	// }
 
-
 	function handleContinue() {
 		if (lastMessage) {
 			dispatch("continue", { id: lastMessage.id });
@@ -222,7 +221,7 @@
 						/>
 					{:else}
 						<div
-							class="size-6 flex items-center justify-center rounded-full bg-gray-300 font-bold uppercase text-gray-500"
+							class="flex size-6 items-center justify-center rounded-full bg-gray-300 font-bold uppercase text-gray-500"
 						>
 							{$page.data?.assistant.name[0]}
 						</div>
