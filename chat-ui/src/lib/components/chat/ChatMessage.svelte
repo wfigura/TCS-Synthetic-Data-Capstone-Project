@@ -173,6 +173,9 @@
 	const convTreeStore = useConvTreeStore();
 
 	$: if (message.children?.length === 0) $convTreeStore.leaf = message.id;
+
+	let showGeneratedData = true;
+	let showSummaryStatistics = false;
 </script>
 
 {#if message.from === "assistant"}
@@ -206,7 +209,7 @@
 			{/if}
 
 			<div
-				class="prose max-w-none max-sm:prose-sm dark:prose-invert prose-headings:font-semibold prose-h1:text-lg prose-h2:text-base prose-h3:text-base prose-pre:bg-gray-800 dark:prose-pre:bg-gray-900"
+				class="prose max-w-none dark:prose-invert max-sm:prose-sm prose-headings:font-semibold prose-h1:text-lg prose-h2:text-base prose-h3:text-base prose-pre:bg-gray-800 dark:prose-pre:bg-gray-900"
 				bind:this={contentEl}
 			>
 				{#each tokens as token}
@@ -249,7 +252,7 @@
 			>
 				{#if isAuthor}
 					<button
-						class="btn rounded-sm p-1 text-sm text-gray-400 focus:ring-0 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300
+						class="btn rounded-sm p-1 text-sm text-gray-400 hover:text-gray-500 focus:ring-0 dark:text-gray-400 dark:hover:text-gray-300
 					{message.score && message.score > 0
 							? 'text-green-500 hover:text-green-500 dark:text-green-400 hover:dark:text-green-400'
 							: ''}"
@@ -261,7 +264,7 @@
 						<CarbonThumbsUp class="h-[1.14em] w-[1.14em]" />
 					</button>
 					<button
-						class="btn rounded-sm p-1 text-sm text-gray-400 focus:ring-0 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300
+						class="btn rounded-sm p-1 text-sm text-gray-400 hover:text-gray-500 focus:ring-0 dark:text-gray-400 dark:hover:text-gray-300
 					{message.score && message.score < 0
 							? 'text-red-500 hover:text-red-500 dark:text-red-400 hover:dark:text-red-400'
 							: ''}"
@@ -274,7 +277,7 @@
 					</button>
 				{/if}
 				<button
-					class="btn rounded-sm p-1 text-sm text-gray-400 focus:ring-0 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300"
+					class="btn rounded-sm p-1 text-sm text-gray-400 hover:text-gray-500 focus:ring-0 dark:text-gray-400 dark:hover:text-gray-300"
 					title="Retry"
 					type="button"
 					on:click={() => dispatch("retry", { id: message.id })}
@@ -352,7 +355,7 @@
 								class="btn rounded-lg px-3 py-1.5 text-sm
 								{loading
 									? 'bg-gray-300 text-gray-400 dark:bg-gray-700 dark:text-gray-600'
-									: 'bg-gray-200 text-gray-600 focus:ring-0   hover:text-gray-800 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-gray-200'}
+									: 'bg-gray-200 text-gray-600 hover:text-gray-800   focus:ring-0 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-gray-200'}
 								"
 								disabled={loading}
 							>
@@ -360,7 +363,7 @@
 							</button>
 							<button
 								type="button"
-								class="btn rounded-sm p-2 text-sm text-gray-400 focus:ring-0 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300"
+								class="btn rounded-sm p-2 text-sm text-gray-400 hover:text-gray-500 focus:ring-0 dark:text-gray-400 dark:hover:text-gray-300"
 								on:click={() => {
 									$convTreeStore.editing = null;
 								}}
@@ -382,7 +385,7 @@
 						<div class="mx-auto flex flex-row flex-nowrap gap-2">
 							{#if downloadLink}
 								<a
-									class="rounded-lg border border-gray-100 bg-gray-100 p-1 text-xs text-gray-400 group-hover:block hover:text-gray-500 max-sm:!hidden md:hidden dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+									class="rounded-lg border border-gray-100 bg-gray-100 p-1 text-xs text-gray-400 group-hover:block hover:text-gray-500 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300 max-sm:!hidden md:hidden"
 									title="Download prompt and parameters"
 									type="button"
 									target="_blank"
@@ -393,7 +396,7 @@
 							{/if}
 							{#if !readOnly}
 								<button
-									class="cursor-pointer rounded-lg border border-gray-100 bg-gray-100 p-1 text-xs text-gray-400 group-hover:block hover:text-gray-500 md:hidden lg:-right-2 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+									class="cursor-pointer rounded-lg border border-gray-100 bg-gray-100 p-1 text-xs text-gray-400 group-hover:block hover:text-gray-500 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300 md:hidden lg:-right-2"
 									title="Branch"
 									type="button"
 									on:click={() => ($convTreeStore.editing = message.id)}
@@ -409,7 +412,6 @@
 		</div>
 	</div>
 {/if}
-
 {#if nChildren > 0}
 	<svelte:self
 		{loading}
@@ -428,17 +430,18 @@
 					class="font-white z-10 -mt-1 ml-3.5 mr-auto flex h-6 w-fit select-none flex-row items-center justify-center gap-1 text-sm"
 				>
 					<button
-						class="inline text-lg font-thin text-gray-400 disabled:pointer-events-none disabled:opacity-25 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-200"
+						class="inline text-lg font-thin text-gray-400 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-25 dark:text-gray-500 dark:hover:text-gray-200"
 						on:click={() => (childrenToRender = Math.max(0, childrenToRender - 1))}
 						disabled={childrenToRender === 0 || loading}
 					>
-						<CarbonChevronLeft class="text-sm" />
+						Generated Data
+						<!-- <CarbonChevronLeft class="text-sm" /> -->
 					</button>
 					<span class=" text-gray-400 dark:text-gray-500">
 						{childrenToRender + 1} / {nChildren}
 					</span>
 					<button
-						class="inline text-lg font-thin text-gray-400 disabled:pointer-events-none disabled:opacity-25 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-200"
+						class="inline text-lg font-thin text-gray-400 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-25 dark:text-gray-500 dark:hover:text-gray-200"
 						on:click={() =>
 							(childrenToRender = Math.min(
 								message?.children?.length ?? 1 - 1,
@@ -446,7 +449,7 @@
 							))}
 						disabled={childrenToRender === nChildren - 1 || loading}
 					>
-						<CarbonChevronRight class="text-sm" />
+						Summary Statistics
 					</button>
 				</div>
 			{/if}
