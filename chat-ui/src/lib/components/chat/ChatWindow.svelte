@@ -8,9 +8,11 @@
 	import CarbonSendAltFilled from "~icons/carbon/send-alt-filled";
 	import CarbonExport from "~icons/carbon/export";
 	import CarbonStopFilledAlt from "~icons/carbon/stop-filled-alt";
+	import CarbonUpload from "~icons/carbon/upload";
 	import CarbonClose from "~icons/carbon/close";
 	import CarbonCheckmark from "~icons/carbon/checkmark";
 	import CarbonCaretDown from "~icons/carbon/caret-down";
+	import Papa from "papaparse";
 
 	import EosIconsLoading from "~icons/eos-icons/loading";
 
@@ -23,7 +25,6 @@
 	import FileDropzone from "./FileDropzone.svelte";
 	import RetryBtn from "../RetryBtn.svelte";
 	import UploadBtn from "../UploadBtn.svelte";
-	import file2base64 from "$lib/utils/file2base64";
 	import type { Assistant } from "$lib/types/Assistant";
 	import { base } from "$app/paths";
 	import ContinueBtn from "../ContinueBtn.svelte";
@@ -61,6 +62,7 @@
 		stop: void;
 		retry: { id: Message["id"]; content?: string };
 		continue: { id: Message["id"] };
+		fileData: string;
 	}>();
 
 	const handleSubmit = () => {
@@ -68,6 +70,44 @@
 		dispatch("message", message);
 		message = "";
 	};
+
+	let filelist: FileList;
+
+	$: if (filelist) {
+		files = Array.from(filelist);
+	}
+
+	let file;
+	let firstFewRows = [];
+	const numberOfRows = 6;
+
+	function handleFileUpload(event) {
+		if (loading) return;
+		file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = function (e) {
+				const text = e.target?.result;
+				const parsedData = Papa.parse(text, { header: false });
+				firstFewRows = parsedData.data
+					.slice(0, numberOfRows)
+					.map((row: any[]) => row.join(","))
+					.join("\n");
+				let message = `A preview of the file uploaded: \n${firstFewRows}.\n\nGenerate 20 more rows of unique, never seen before data based on the fields from the file ${files[0].name}. Each field has an infinite number of possible values it can generate from. The data generated should be downloadable in csv format.`;
+				dispatch("message", message);
+			};
+			reader.readAsText(file);
+		}
+	}
+
+	let number = 20;
+
+	function handleClick() {
+		if (loading) return;
+		message = `Generate ${number} more rows of data.`;
+		dispatch("message", message);
+		message = "";
+	}
 
 	let lastTarget: EventTarget | null = null;
 
@@ -90,8 +130,6 @@
 
 	$: lastMessage = browser && (messages.find((m) => m.id == $convTreeStore.leaf) as Message);
 	$: lastIsError = lastMessage && lastMessage.from === "user" && !loading;
-
-	$: sources = files.map((file) => file2base64(file));
 
 	function onShare() {
 		dispatch("share");
@@ -248,31 +286,6 @@
 	<div
 		class="dark:via-gray-80 pointer-events-none absolute inset-x-0 bottom-0 z-0 mx-auto flex w-full max-w-3xl flex-col items-center justify-center bg-gradient-to-t from-white via-white/80 to-white/0 px-3.5 py-4 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/0 max-md:border-t max-md:bg-white max-md:dark:bg-gray-900 sm:px-5 md:py-8 xl:max-w-4xl [&>*]:pointer-events-auto"
 	>
-		{#if sources.length}
-			<div class="flex flex-row flex-wrap justify-center gap-2.5 max-md:pb-3">
-				{#each sources as source, index}
-					{#await source then src}
-						<div class="relative h-16 w-16 overflow-hidden rounded-lg shadow-lg">
-							<img
-								src={`data:image/*;base64,${src}`}
-								alt="input content"
-								class="h-full w-full rounded-lg bg-gray-400 object-cover dark:bg-gray-900"
-							/>
-							<!-- add a button on top that deletes this image from sources -->
-							<button
-								class="absolute left-1 top-1"
-								on:click={() => {
-									files = files.filter((_, i) => i !== index);
-								}}
-							>
-								<CarbonClose class="text-md font-black text-gray-300  hover:text-gray-100" />
-							</button>
-						</div>
-					{/await}
-				{/each}
-			</div>
-		{/if}
-
 		<div class="w-full">
 			<div class="flex w-full pb-3">
 				{#if $page.data.settings?.searchEnabled && !assistant}
@@ -306,9 +319,6 @@
 						/> -->
 						<!-- </div> -->
 
-						<!-- {#if currentModel.multimodal}
-							<UploadBtn bind:files classNames="ml-auto" />
-						{/if} -->
 						{#if messages && lastMessage && lastMessage.interrupted && !isReadOnly}
 							<div
 								use:inview={options}
@@ -341,6 +351,22 @@
 					</div>
 				{/if}
 			</div>
+			<div>
+				{#if messages.length > 0}
+					<div class="num_input_btn">
+						<input
+							type="number"
+							bind:value={number}
+							min="0"
+							max="50"
+							step="1"
+							class="styled-input"
+						/>
+						<button on:click={handleClick} class="styled-button">Generate Data</button>
+					</div>
+				{/if}
+			</div>
+
 			<form
 				on:dragover={onDragOver}
 				on:dragenter={onDragEnter}
@@ -434,20 +460,66 @@
 							{/if}
 						</button>
 					</div>
-					<div class="flex">
-						<!-- <p class="flex items-center hover:text-gray-400 max-sm:rounded-lg max-sm:bg-gray-50 max-sm:px-2.5 dark:max-sm:bg-gray-800">
-						Upload a file
-					</p>
-					<div class="file-upload">
-					<button
-					class="btn mx-1 my-1 inline-block h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40">
-					<input type="file" id="fileUpload" name="fileUpload" />
-				</button> -->
-						<!-- <UploadBtn {files} /> -->
-						<!-- </div> -->
-					</div>
 				{/if}
+				<button
+					class="btn relative h-8 rounded-lg border bg-white px-3 py-1 text-sm text-gray-500 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+				>
+					<input
+						bind:files={filelist}
+						class="absolute w-full cursor-pointer opacity-0"
+						type="file"
+						accept=".csv"
+						on:change={handleFileUpload}
+					/>
+					{#if files.length}
+						<CarbonUpload class="mr-2 text-xs" /> {files[0].name}
+					{:else}
+						<CarbonUpload class="mr-2 text-xs" /> File Upload
+					{/if}
+				</button>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	.num_input_btn {
+		float: right;
+		margin: 10px;
+	}
+
+	.styled-input {
+		border: 2px solid #ccc;
+		color: black;
+		border-radius: 4px;
+		font-size: 16px;
+		width: 80px;
+		text-align: center;
+		margin-right: 10px;
+		background-color: lightgray;
+	}
+
+	.styled-input:focus {
+		outline: none;
+		border-color: #005aba;
+	}
+
+	.styled-button {
+		padding: 2px 5px;
+		background-color: #005aba;
+		color: white;
+		border: none;
+		border-radius: 4px;
+		font-size: 16px;
+		cursor: pointer;
+		transition: background-color 0.3s ease;
+	}
+
+	.styled-button:hover {
+		background-color: rgb(0, 74, 154);
+	}
+
+	.styled-button:focus {
+		outline: none;
+	}
+</style>

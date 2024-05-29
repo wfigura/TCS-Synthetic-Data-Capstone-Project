@@ -11,15 +11,13 @@ import type { MessageUpdate } from "$lib/types/MessageUpdate";
 import { runWebSearch } from "$lib/server/websearch/runWebSearch";
 import { abortedGenerations } from "$lib/server/abortedGenerations";
 import { summarize } from "$lib/server/summarize";
-import { uploadFile } from "$lib/server/files/uploadFile";
-import sizeof from "image-size";
 import { convertLegacyConversation } from "$lib/utils/tree/convertLegacyConversation";
 import { isMessageId } from "$lib/utils/tree/isMessageId";
 import { buildSubtree } from "$lib/utils/tree/buildSubtree.js";
 import { addChildren } from "$lib/utils/tree/addChildren.js";
 import { addSibling } from "$lib/utils/tree/addSibling.js";
 import { preprocessMessages } from "$lib/server/preprocessMessages.js";
-import * as fs from 'fs';
+
 
 export async function POST({ request, locals, params, getClientAddress }) {
 	const id = z.string().parse(params.id);
@@ -108,6 +106,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 
 	// fetch the model
 	const model = models.find((m) => m.id === conv.model);
+	const modelB = models[1]
 
 	if (!model) {
 		throw error(410, "Model not available anymore");
@@ -121,50 +120,16 @@ export async function POST({ request, locals, params, getClientAddress }) {
 		id: messageId,
 		is_retry: isRetry,
 		is_continue: isContinue,
-		web_search: webSearch,
-		files: b64files,
+		web_search: webSearch
 	} = z
 		.object({
 			id: z.string().uuid().refine(isMessageId).optional(), // parent message id to append to for a normal message, or the message id for a retry/continue
 			inputs: z.optional(z.string().trim().min(1)),
 			is_retry: z.optional(z.boolean()),
 			is_continue: z.optional(z.boolean()),
-			web_search: z.optional(z.boolean()),
-			files: z.optional(z.array(z.string())),
+			web_search: z.optional(z.boolean())
 		})
 		.parse(json);
-
-	// files is an array of base64 strings encoding Blob objects
-	// we need to convert this array to an array of File objects
-
-	const files = b64files?.map((file) => {
-		const blob = Buffer.from(file, "base64");
-		return new File([blob], "image.png");
-	});
-
-	// check sizes
-	if (files) {
-		const filechecks = await Promise.all(
-			files.map(async (file) => {
-				const dimensions = sizeof(Buffer.from(await file.arrayBuffer()));
-				return (
-					file.size > 2 * 1024 * 1024 ||
-					(dimensions.width ?? 0) > 224 ||
-					(dimensions.height ?? 0) > 224
-				);
-			})
-		);
-
-		if (filechecks.some((check) => check)) {
-			throw error(413, "File too large, should be <2MB and 224x224 max.");
-		}
-	}
-
-	let hashes: undefined | string[];
-
-	if (files) {
-		hashes = await Promise.all(files.map(async (file) => await uploadFile(file, conv)));
-	}
 
 	// we will append tokens to the content of this message
 	let messageToWriteToId: Message["id"] | undefined = undefined;
@@ -197,7 +162,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			const newUserMessageId = addSibling(conv, { from: "user", content: newPrompt }, messageId);
 			messageToWriteToId = addChildren(
 				conv,
-				{ from: "assistant", content: "", files: hashes },
+				{ from: "assistant", content: ""},
 				newUserMessageId
 			);
 			messagesForPrompt = buildSubtree(conv, newUserMessageId);
@@ -216,7 +181,6 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			{
 				from: "user",
 				content: newPrompt ?? "",
-				files: hashes,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			},
@@ -321,7 +285,7 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			if (webSearch && !isContinue && !conv.assistantId) {
 				messageToWriteTo.webSearch = await runWebSearch(conv, messagesForPrompt, update);
 			}
-
+			
 			// inject websearch result & optionally images into the messages
 			const processedMessages = await preprocessMessages(
 				messagesForPrompt,
@@ -330,59 +294,127 @@ export async function POST({ request, locals, params, getClientAddress }) {
 			);
 
 			let previousText = messageToWriteTo.content;
-			let lineCount = 0;
-			const maxLineCount = 15;
-
+			let bias_content = ""
 			try {
 				const endpoint = await model.getEndpoint();
-				while (lineCount <= maxLineCount) {
-					for await (const output of await endpoint({
-						messages: processedMessages,
-						preprompt: conv.preprompt,
-						continueMessage: isContinue,
-					})) {
-						// if not generated_text is here it means the generation is not done
-						if (!output.generated_text) {
-							// else we get the next token
-							if (!output.token.special) {
-								update({
-									type: "stream",
-									token: output.token.text,
-								});
-								// abort check
-								const date = abortedGenerations.get(convId.toString());
-								if (date && date > promptedAt) {
-									break;
-								}
-								// no output check
-								if (!output) {
-									break;
-								}
-
-								// otherwise we just concatenate tokens
-								messageToWriteTo.content += output.token.text;
-								if (output.token.text == "\n") {
-									lineCount++;
-								}
+				for await (const output of await endpoint({
+					messages: processedMessages,
+					preprompt: conv.preprompt,
+					continueMessage: isContinue,
+				})) {
+					// if not generated_text is here it means the generation is not done
+					if (!output.generated_text) {
+						// else we get the next token
+						if (!output.token.special) {
+							update({
+								type: "stream",
+								token: output.token.text,
+							});
+							// abort check
+							const date = abortedGenerations.get(convId.toString());
+							if (date && date > promptedAt) {
+								break;
 							}
-						} else {
-							messageToWriteTo.interrupted = !output.token.special;
-							// add output.generated text to the last message
-							// strip end tokens from the output.generated_text
-							const text = (model.parameters.stop ?? []).reduce((acc: string, curr: string) => {
-								if (acc.endsWith(curr)) {
-									messageToWriteTo.interrupted = false;
-									return acc.slice(0, acc.length - curr.length);
-								}
-								return acc;
-							}, output.generated_text.trimEnd());
+							// no output check
+							if (!output) {
+								break;
+							}
 
-							messageToWriteTo.content = previousText + text;
-							previousText = messageToWriteTo.content;
-							messageToWriteTo.updatedAt = new Date();
+							// otherwise we just concatenate tokens
+							messageToWriteTo.content += output.token.text;
 						}
+					} else {
+						messageToWriteTo.interrupted = !output.token.special;
+						// add output.generated text to the last message
+						// strip end tokens from the output.generated_text
+						const text = (model.parameters.stop ?? []).reduce((acc: string, curr: string) => {
+							if (acc.endsWith(curr)) {
+								messageToWriteTo.interrupted = false;
+								return acc.slice(0, acc.length - curr.length);
+							}
+							return acc;
+						}, output.generated_text.trimEnd());
+
+						messageToWriteTo.content = previousText + text;
+						messageToWriteTo.updatedAt = new Date();
 					}
 				}
+
+				// const UserMessageId = addChildren(
+				// 	conv,
+				// 	{
+				// 		from: "user",
+				// 		content: messageToWriteTo.content,
+				// 		createdAt: new Date(),
+				// 		updatedAt: new Date(),
+				// 	},
+				// 	messageId
+				// );
+
+				
+
+				const BiasMessageId = addChildren(
+					conv,
+					{
+						from: "user",
+						content: `Here is the response generated by Model A: "${messageToWriteTo.content}". Please tell me of any potential bias in this response assuming the input is unbiased and just looking at the dataset for number of rows and columns - don't look at any other output just the dataset.  Also Compute Statistics for the Synthetic Data and provide to me.  Don't provide code or how to do it, I just want you to provide me with the statistics`,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					},
+					messageId
+				);
+
+				
+				messagesForPrompt = buildSubtree(conv, BiasMessageId);
+
+				const processedMessagesModelB = await preprocessMessages(
+					messagesForPrompt,
+					model.multimodal,
+					convId
+				);
+				const endpoint2 = await modelB.getEndpoint();
+				for await (const output2 of await endpoint2({
+					messages: processedMessagesModelB,
+					preprompt: conv.preprompt,
+					continueMessage: isContinue,
+				})) {
+					// if not generated_text is here it means the generation is not done
+					if (!output2.generated_text) {
+						// else we get the next token
+						if (!output2.token.special) {
+							// update({
+							// 	type: "stream",
+							// 	token: output2.token.text,
+							// });
+							// abort check
+							const date = abortedGenerations.get(convId.toString());
+							if (date && date > promptedAt) {
+								break;
+							}
+							// no output check
+							if (!output2) {
+								break;
+							}
+
+							// otherwise we just concatenate tokens
+							bias_content += output2.token.text;
+						}
+					} else {
+						// add output.generated text to the last message
+						// strip end tokens from the output.generated_text
+						const text = (modelB.parameters.stop ?? []).reduce((acc: string, curr: string) => {
+							if (acc.endsWith(curr)) {
+								return acc.slice(0, acc.length - curr.length);
+							}
+							return acc;
+						}, output2.generated_text.trimEnd());
+
+						// bias_content = bias_content + text;
+					}
+				}
+			conv.messages[conv.messages.length - 1].content = bias_content
+			conv.messages[conv.messages.length - 1].from = "assistant"
+
 			} catch (e) {
 				update({ type: "status", status: "error", message: (e as Error).message });
 			}
@@ -402,34 +434,15 @@ export async function POST({ request, locals, params, getClientAddress }) {
 
 			// used to detect if cancel() is called bc of interrupt or just because the connection closes
 			doneStreaming = true;
-
+			
 			update({
 				type: "finalAnswer",
 				text: messageToWriteTo.content,
 			});
 
-			// write assistant response into a txt file
-			const index = messageToWriteTo.content.indexOf('|');
-			const lines = index !== -1 ? messageToWriteTo.content.substring(index) : messageToWriteTo.content;
-			if (messagesForPrompt.length == 2) {
-				fs.writeFile('./output.txt', lines + '\r\n', (err) => {
-					if (err) {
-						console.error('Error appending to file:', err);
-					} else {
-						console.log('Content was appended to file successfully.');
-					}
-				});
-			} else {
-				const data = lines.split('\n').slice(2);
-				const newString = data.join('\n');
-				fs.appendFile('./output.txt', newString + '\r\n', (err) => {
-					if (err) {
-						console.error('Error appending to file:', err);
-					} else {
-						console.log('Content [' + data.length + ' lines] was appended to file successfully.');
-					}
-				});
-			}
+
+
+
 
 			await summarizeIfNeeded;
 			controller.close();

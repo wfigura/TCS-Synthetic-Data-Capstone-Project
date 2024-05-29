@@ -14,7 +14,6 @@
 	import type { Message } from "$lib/types/Message";
 	import type { MessageUpdate } from "$lib/types/MessageUpdate";
 	import titleUpdate from "$lib/stores/titleUpdate";
-	import file2base64 from "$lib/utils/file2base64";
 	import { addChildren } from "$lib/utils/tree/addChildren";
 	import { addSibling } from "$lib/utils/tree/addSibling";
 	import { createConvTreeStore } from "$lib/stores/convTree";
@@ -81,22 +80,6 @@
 			loading = true;
 			pending = true;
 
-			const module = await import("browser-image-resizer");
-			// currently, only IDEFICS is supported by TGI
-			// the size of images is hardcoded to 224x224 in TGI
-			// this will need to be configurable when support for more models is added
-			const resizedImages = await Promise.all(
-				files.map(async (file) => {
-					return await module
-						.readAndCompressImage(file, {
-							maxHeight: 224,
-							maxWidth: 224,
-							quality: 1,
-						})
-						.then(async (el) => await file2base64(el as File));
-				})
-			);
-
 			let messageToWriteToId: Message["id"] | undefined = undefined;
 			// used for building the prompt, subtree of the conversation that goes from the latest message to the root
 
@@ -134,7 +117,7 @@
 							messages,
 							rootMessageId: data.rootMessageId,
 						},
-						{ from: "assistant", content: "", files: resizedImages },
+						{ from: "assistant", content: "" },
 						newUserMessageId
 					);
 				} else if (messageToRetry?.from === "assistant") {
@@ -160,7 +143,6 @@
 					{
 						from: "user",
 						content: prompt ?? "",
-						files: resizedImages,
 						createdAt: new Date(),
 						updatedAt: new Date(),
 					},
@@ -204,7 +186,6 @@
 					is_retry: isRetry,
 					is_continue: isContinue,
 					web_search: !hasAssistant && $webSearchParameters.useSearch,
-					files: isRetry ? undefined : resizedImages,
 				}),
 			});
 
