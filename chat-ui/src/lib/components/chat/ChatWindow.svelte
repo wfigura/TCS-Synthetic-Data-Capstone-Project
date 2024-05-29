@@ -1,6 +1,9 @@
 <script lang="ts">
+	// import inView from ".inViewSimple.js"
+	import { inview } from "svelte-inview";
+	import IntersectionObserver from "svelte-intersection-observer";
 	import type { Message } from "$lib/types/Message";
-	import { createEventDispatcher, onDestroy, tick } from "svelte";
+	import { createEventDispatcher, onDestroy, onMount, tick } from "svelte";
 
 	import CarbonSendAltFilled from "~icons/carbon/send-alt-filled";
 	import CarbonExport from "~icons/carbon/export";
@@ -115,9 +118,50 @@
 	}
 
 	// If last message is from user, scroll to bottom
-	$: if (lastMessage && lastMessage.from === "user") {
-		scrollToBottom();
+	// $: if (lastMessage && lastMessage.from === "user") {
+	// 	scrollToBottom();
+	// }
+	// $: if (browser) {
+	// 	const continueBtn = document.querySelector("#continue-btn");
+	// 	if (continueBtn && lastMessage && typeof lastMessage !== "boolean") {
+	// 		console.log("Auto continue");
+	// 		dispatch("continue", { id: lastMessage.id });
+	// 	}
+	// }
+
+	// $: {
+	// console.log("Button check");
+	// if (messages && lastMessage && lastMessage.interrupted && !isReadOnly) {
+	// 	setTimeout(() => {
+	// 		dispatch("continue", {
+	// 			id: lastMessage.id,
+	// 		});
+	// 	}, 1000);
+	// }
+	// 	if (continueBtnVisible) {
+	// 		console.log("Making it True");
+	// 	}
+	// }
+
+	let continueBtnVisible = false;
+	let continueBtnRef: HTMLElement | null = null;
+
+	// const dispatch = createEventDispatcher<{
+	// 	continue: { id: Message["id"] };
+	// }>();
+
+	// $: lastMessage = browser && messages.find((m) => m.id === currentModel.id);
+
+	function handleContinue() {
+		if (lastMessage) {
+			dispatch("continue", { id: lastMessage.id });
+		}
 	}
+
+	let element: any;
+	let intersecting: any;
+	let isInView: boolean;
+	const options = {};
 </script>
 
 <div class="relative min-h-0 min-w-0">
@@ -249,19 +293,50 @@
 					/>
 				{:else}
 					<div class="ml-auto gap-2">
+						<!-- <ContinueBtn
+							bind:this={element}
+							on:click={() => {
+								console.log("Continue Btn click");
+								if (lastMessage && lastMessage.ancestors) {
+									dispatch("continue", {
+										id: lastMessage?.id,
+									});
+								}
+							}}
+						/> -->
+						<!-- </div> -->
+
 						<!-- {#if currentModel.multimodal}
 							<UploadBtn bind:files classNames="ml-auto" />
 						{/if} -->
 						{#if messages && lastMessage && lastMessage.interrupted && !isReadOnly}
-							<ContinueBtn
-								on:click={() => {
-									if (lastMessage && lastMessage.ancestors) {
-										dispatch("continue", {
-											id: lastMessage?.id,
-										});
+							<div
+								use:inview={options}
+								on:inview_change={(event) => {
+									const { inView, entry, scrollDirection, observer, node } = event.detail;
+									isInView = inView;
+									console.log("Btn appears");
+									if (messages && lastMessage && lastMessage.interrupted && !isReadOnly) {
+										setTimeout(() => {
+											dispatch("continue", {
+												id: lastMessage.id,
+											});
+										}, 1000);
 									}
+									console.log("Btn ends");
 								}}
-							/>
+							>
+								<ContinueBtn
+									on:click={() => {
+										console.log("Continue Btn click");
+										if (lastMessage && lastMessage.ancestors) {
+											dispatch("continue", {
+												id: lastMessage?.id,
+											});
+										}
+									}}
+								/>
+							</div>
 						{/if}
 					</div>
 				{/if}

@@ -62,6 +62,7 @@
 					fileData = JSON.stringify(filteredData, null, 2);
 					value = fileData; // Update the textarea value with filtered data
 					console.log("Filtered CSV Data:", filteredData);
+					dispatch("submit"); // Dispatch the submit event after processing
 				},
 			});
 		};
