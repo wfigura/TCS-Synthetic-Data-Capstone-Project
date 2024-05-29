@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from "svelte";
+	import UploadBtn from "../UploadBtn.svelte";
+	// import Papa from "papaparse";
+	import type { Message } from "$lib/types/Message";
 
 	export let value = "";
 	export let minRows = 1;
 	export let maxRows: null | number = null;
 	export let placeholder = "";
 	export let disabled = false;
+	export let files: File[] = [];
 
 	const TABLET_VIEWPORT_WIDTH = 768;
 
@@ -29,6 +33,41 @@
 		}
 	}
 
+	const dispatch2 = createEventDispatcher<{
+		message: string;
+		share: void;
+		stop: void;
+		retry: { id: Message["id"]; content?: string };
+		continue: { id: Message["id"] };
+		fileData: string;
+	}>();
+
+	let file;
+	let firstFewRows = [];
+
+	// function handleFileUpload(event) {
+	// 	console.log("here???");
+	// 	file = event.target.files[0];
+	// 	if (file) {
+	// 		const reader = new FileReader();
+	// 		reader.onload = function (e) {
+	// 			const text = e.target.result;
+	// 			const parsedData = Papa.parse(text, { header: true });
+	// 			firstFewRows = parsedData.data.slice(0, 5);
+	// 			console.log(firstFewRows);
+	// 			let message = `Generate an additional 20 rows of new, unique data based on file ${files[0].name}. A preview of the file uploaded: ${firstFewRows}`;
+	// 			dispatch2("message", message);
+	// 		};
+	// 		reader.readAsText(file);
+	// 	}
+	// }
+
+	let filelist: FileList;
+
+	$: if (filelist) {
+		files = Array.from(filelist);
+	}
+
 	onMount(() => {
 		if (innerWidth > TABLET_VIEWPORT_WIDTH) {
 			textareaElement.focus();
@@ -38,11 +77,14 @@
 
 <svelte:window bind:innerWidth />
 
-<div class="relative flex min-w-0 flex-1">
+<div class="relative flex min-w-0 flex-1 items-center">
 	<pre
 		class="scrollbar-custom invisible overflow-x-hidden overflow-y-scroll whitespace-pre-wrap break-words"
 		aria-hidden="true"
-		style="min-height: {minHeight}; max-height: {maxHeight}">{" " + "\n"}</pre>
+		style="min-height: {minHeight}; max-height: {maxHeight}"
+	/>
+	<!-- <UploadBtn bind:files on:change={handleFileUpload} /> -->
+	<!-- <input type="file" bind:files={filelist} accept=".csv" on:change={handleFileUpload} /> -->
 
 	<textarea
 		enterkeyhint="send"
@@ -66,6 +108,9 @@
 	textarea {
 		font-family: inherit;
 		box-sizing: border-box;
-		line-height: 1.5;
+		line-height: 1.8;
+	}
+	.relative.flex {
+		align-items: center;
 	}
 </style>

@@ -14,18 +14,15 @@
 	import { UrlDependency } from "$lib/types/UrlDependency";
 	import { error } from "$lib/stores/errors";
 
-	import MobileNav from "$lib/components/MobileNav.svelte";
-	import NavMenu from "$lib/components/NavMenu.svelte";
 	import Toast from "$lib/components/Toast.svelte";
 	import { PUBLIC_APP_ASSETS, PUBLIC_APP_NAME } from "$env/static/public";
-	import titleUpdate from "$lib/stores/titleUpdate";
 	import { createSettingsStore } from "$lib/stores/settings";
 	import { browser } from "$app/environment";
 	import DisclaimerModal from "$lib/components/DisclaimerModal.svelte";
+	import TopNav from "$lib/components/TopNav.svelte";
 
 	export let data;
 
-	let isNavOpen = false;
 	let errorToastTimeout: ReturnType<typeof setTimeout>;
 	let currentError: string | null;
 
@@ -45,70 +42,11 @@
 		}, 3000);
 	}
 
-	async function deleteConversation(id: string) {
-		try {
-			const res = await fetch(`${base}/conversation/${id}`, {
-				method: "DELETE",
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
-
-			if (!res.ok) {
-				$error = "Error while deleting conversation, try again.";
-				return;
-			}
-
-			if ($page.params.id !== id) {
-				await invalidate(UrlDependency.ConversationList);
-			} else {
-				await goto(`${base}/`, { invalidateAll: true });
-			}
-		} catch (err) {
-			console.error(err);
-			$error = String(err);
-		}
-	}
-
-	async function editConversationTitle(id: string, title: string) {
-		try {
-			const res = await fetch(`${base}/conversation/${id}`, {
-				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ title }),
-			});
-
-			if (!res.ok) {
-				$error = "Error while editing title, try again.";
-				return;
-			}
-
-			await invalidate(UrlDependency.ConversationList);
-		} catch (err) {
-			console.error(err);
-			$error = String(err);
-		}
-	}
-
 	onDestroy(() => {
 		clearTimeout(errorToastTimeout);
 	});
 
 	$: if ($error) onError();
-
-	$: if ($titleUpdate) {
-		const convIdx = data.conversations.findIndex(({ id }) => id === $titleUpdate?.convId);
-
-		if (convIdx != -1) {
-			data.conversations[convIdx].title = $titleUpdate?.title ?? data.conversations[convIdx].title;
-		}
-		// update data.conversations
-		data.conversations = [...data.conversations];
-
-		$titleUpdate = null;
-	}
 
 	const settings = createSettingsStore(data.settings);
 
@@ -118,10 +56,6 @@
 		}
 		$settings.activeModel = $page.url.searchParams.get("model") ?? $settings.activeModel;
 	}
-
-	$: mobileNavTitle = ["/models", "/assistants", "/privacy"].includes($page.route.id ?? "")
-		? ""
-		: data.conversations.find((conv) => conv.id === $page.params.id)?.title;
 </script>
 
 <svelte:head>
@@ -174,31 +108,10 @@
 	<DisclaimerModal />
 {/if}
 
-<div
-	class="grid h-full w-screen grid-cols-1 grid-rows-[auto,1fr] overflow-hidden text-smd md:grid-cols-[280px,1fr] md:grid-rows-[1fr] dark:text-gray-300"
->
-	<MobileNav isOpen={isNavOpen} on:toggle={(ev) => (isNavOpen = ev.detail)} title={mobileNavTitle}>
-		<NavMenu
-			conversations={data.conversations}
-			user={data.user}
-			canLogin={data.user === undefined && data.loginEnabled}
-			on:shareConversation={(ev) => shareConversation(ev.detail.id, ev.detail.title)}
-			on:deleteConversation={(ev) => deleteConversation(ev.detail)}
-			on:editConversationTitle={(ev) => editConversationTitle(ev.detail.id, ev.detail.title)}
-		/>
-	</MobileNav>
-	<nav class="grid max-h-screen grid-cols-1 grid-rows-[auto,1fr,auto] max-md:hidden">
-		<NavMenu
-			conversations={data.conversations}
-			user={data.user}
-			canLogin={data.user === undefined && data.loginEnabled}
-			on:shareConversation={(ev) => shareConversation(ev.detail.id, ev.detail.title)}
-			on:deleteConversation={(ev) => deleteConversation(ev.detail)}
-			on:editConversationTitle={(ev) => editConversationTitle(ev.detail.id, ev.detail.title)}
-		/>
-	</nav>
+<div class="text-smd grid h-full w-screen overflow-hidden dark:text-gray-300">
 	{#if currentError}
 		<Toast message={currentError} />
 	{/if}
+	<TopNav />
 	<slot />
 </div>

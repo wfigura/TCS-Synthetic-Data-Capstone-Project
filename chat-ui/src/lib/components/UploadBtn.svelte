@@ -19,5 +19,9 @@
 		type="file"
 		accept=".csv"
 	/>
-	<CarbonUpload class="mr-2 text-xs " /> Upload Sample CSV File
+	{#if files.length}
+		<CarbonUpload class="mr-2 text-xs" /> {files[0].name}
+	{:else}
+		<CarbonUpload class="mr-2 text-xs" /> File Upload
+	{/if}
 </button>
